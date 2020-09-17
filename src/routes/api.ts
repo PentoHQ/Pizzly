@@ -1,12 +1,14 @@
 import * as express from 'express'
 import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid'
-import { store } from '../lib/database'
+import { configurations, store } from '../lib/database'
 import * as access from '../lib/access'
 import * as integrations from '../lib/database/integrations'
 import { PizzlyError } from '../lib/error-handling'
 import { refreshAuthentication } from '../lib/oauth'
 import { Types } from '../types'
+import axios from 'axios'
+import { interpolate } from '../lib/proxy/interpolation'
 
 const api = express.Router()
 
@@ -323,6 +325,68 @@ api.post('/:integrationId/authentications/:authId/refresh', async (req, res, nex
 api.delete('/:integrationId/authentications/:authId', async (req, res, next) => {
   const integrationId = req.params.integrationId
   const authId = req.params.authId
+
+  const authenticationInStore = await store('authentications')
+    .select('auth_id', 'setup_id', 'payload', 'created_at', 'updated_at')
+    .where({ buid: integrationId, auth_id: authId })
+    .first()
+
+  if (!authenticationInStore) {
+    next(new PizzlyError('unknown_authentication'))
+    return
+  }
+
+  const authenticaton: Types.Authentication = {
+    object: 'authentication',
+    id: authId,
+    auth_id: authId,
+    setup_id: authenticationInStore.setup_id,
+    payload: authenticationInStore.payload,
+    created_at: authenticationInStore.created_at,
+    updated_at: authenticationInStore.updated_at
+  }
+
+  const configurationId = authenticaton.setup_id
+  const savedConfig = await store('configurations')
+    .select('credentials', 'scopes', 'created_at', 'updated_at')
+    .where({ buid: integrationId, setup_id: configurationId })
+    .first()
+
+  if (!savedConfig) {
+    next(new PizzlyError('unknown_configuration'))
+    return
+  }
+
+  const configuration: Types.Configuration = {
+    id: configurationId,
+    setup_id: configurationId,
+    object: 'configuration',
+    scopes: savedConfig.scopes,
+    credentials: savedConfig.credentials
+  }
+  const credentials = configuration.credentials as Types.OAuth2Credentials
+  // Make sure the integration exists
+  const integration = await integrations.get(integrationId).catch(() => {
+    return null
+  })
+
+  if (!integration) {
+    next(new PizzlyError('unknown_integration'))
+    return
+  }
+
+  // Revoke if OAUTH2 and it has revocationURL
+  if (integrations.isOAuth2(integration)) {
+    const auth = integration.auth as Types.OAuth2Config
+    if (auth.revocationURL) {
+      await axios.post(auth.revocationURL, auth.revocationParams, {
+        auth: {
+          username: credentials.clientId,
+          password: credentials.clientSecret
+        }
+      })
+    }
+  }
 
   const affectedRows = await store('authentications')
     .where({ buid: integrationId, auth_id: authId })
