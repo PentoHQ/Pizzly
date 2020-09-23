@@ -395,7 +395,6 @@ api.delete('/:integrationId/authentications/:authId', async (req, res, next) => 
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         })
-        console.log(response)
       } catch (err) {
         next(new PizzlyError(err))
       }
