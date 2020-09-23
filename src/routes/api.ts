@@ -9,11 +9,6 @@ import { refreshAuthentication } from '../lib/oauth'
 import { Types } from '../types'
 import axios from 'axios'
 import querystring from 'querystring'
-require('axios-debug-log')({
-  request: function(debug, config) {
-    debug('Request with ' + JSON.stringify(config))
-  }
-})
 
 const api = express.Router()
 
