@@ -1,5 +1,5 @@
 import * as express from 'express'
-import bodyParser from 'body-parser'
+import bodyParser, { json } from 'body-parser'
 import { v4 as uuidv4 } from 'uuid'
 import { configurations, store } from '../lib/database'
 import * as access from '../lib/access'
@@ -8,7 +8,12 @@ import { PizzlyError } from '../lib/error-handling'
 import { refreshAuthentication } from '../lib/oauth'
 import { Types } from '../types'
 import axios from 'axios'
-import { interpolate } from '../lib/proxy/interpolation'
+import querystring from 'querystring'
+require('axios-debug-log')({
+  request: function(debug, config) {
+    debug('Request with ' + JSON.stringify(config))
+  }
+})
 
 const api = express.Router()
 
@@ -345,6 +350,7 @@ api.delete('/:integrationId/authentications/:authId', async (req, res, next) => 
     created_at: authenticationInStore.created_at,
     updated_at: authenticationInStore.updated_at
   }
+  const pl = authenticaton.payload as Types.OAuth2Payload
 
   const configurationId = authenticaton.setup_id
   const savedConfig = await store('configurations')
@@ -379,12 +385,25 @@ api.delete('/:integrationId/authentications/:authId', async (req, res, next) => 
   if (integrations.isOAuth2(integration)) {
     const auth = integration.auth as Types.OAuth2Config
     if (auth.revocationURL) {
-      await axios.post(auth.revocationURL, auth.revocationParams, {
-        auth: {
-          username: credentials.clientId,
-          password: credentials.clientSecret
-        }
-      })
+      try {
+        const response = await axios({
+          method: 'POST',
+          url: auth.revocationURL,
+          data: querystring.stringify({
+            token: pl.refreshToken
+          }),
+          auth: {
+            username: credentials.clientId,
+            password: credentials.clientSecret
+          },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        })
+        console.log(response)
+      } catch (err) {
+        next(new PizzlyError(err))
+      }
     }
   }
 

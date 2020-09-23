@@ -7,7 +7,9 @@
     "authType": "OAUTH2",
     "bodyFormat": "form",
     "tokenParams": {},
-    "revocationParams": {},
+    "revocationParams": {
+      "token": "${auth.refreshToken}",
+    },
     "revocationHeaders": {
       "Authorization": "Basic ${auth.clientCredentialsBasic}"
     },
