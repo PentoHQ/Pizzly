@@ -5,7 +5,6 @@ import { NoAuthInProgress } from './errors'
 import { asyncMiddleware } from '../../errorHandler'
 
 const getConnectParams = (params?: any) => {
-  console.log(params)
   if (params === undefined) {
     return {}
   }

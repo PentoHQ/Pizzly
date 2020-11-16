@@ -25,10 +25,6 @@ export default () => {
 
   router.get(
     '/:buid',
-    (req, res, next) => {
-      console.log(req.query)
-      next()
-    },
     connectBuid,
     connectContext,
     setupId,

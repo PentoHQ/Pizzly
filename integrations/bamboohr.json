@@ -16,7 +16,7 @@
     }
   },
   "request": {
-    "baseURL": "https://api.bamboohr.com/api/gateway.php/${headers.subDomain}/v1",
+    "baseURL": "https://api.bamboohr.com/api/gateway.php/${connectParams.subDomain}/v1",
     "headers": {
       "Accept": "application/json",
       "Authorization": "Bearer ${auth.accessToken}",
