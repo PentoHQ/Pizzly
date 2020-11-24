@@ -12,7 +12,7 @@
     "start": "node dist/src",
     "dev": "concurrently 'yarn dev:build' 'yarn dev:serve' ",
     "dev:build": "yarn build --watch",
-    "dev:serve": "nodemon --delay 1 --watch dist/src dist/src",
+    "dev:serve": "nodemon --delay 1 --watch dist/src node dist/src",
     "db:setup": "npm run db:create && npm run db:migrate",
     "db:create": "node dist/src/lib/database/config/create",
     "db:migrate": "knex --cwd dist/src/lib/database/config migrate:latest",
