@@ -2,7 +2,6 @@ declare namespace Types {
   export interface ConnectOptions {
     authId?: string
     setupId?: string
-    params?: any
   }
 
   export interface ConnectSuccess {

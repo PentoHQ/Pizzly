@@ -14,7 +14,7 @@ export const session = () => {
     cookie: { secure: 'auto' },
     resave: false,
     saveUninitialized: true,
-    store: new knexSessionStore({ knex, createTable: false })
+    store: new knexSessionStore({ knex })
   })
 }
 

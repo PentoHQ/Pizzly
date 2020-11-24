@@ -396,7 +396,7 @@ api.delete('/:integrationId/authentications/:authId', async (req, res, next) => 
           }
         })
         if (response.status > 299) {
-          next(new PizzlyError(`could not reboke token, got status: ${response.statusText}`))
+          next(new PizzlyError(`could not revoke token, got status: ${response.statusText}`))
         }
       } catch (err) {
         next(new PizzlyError(err))
